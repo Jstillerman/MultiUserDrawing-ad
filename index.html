@@ -1,0 +1,68 @@
+<html>
+<head>
+  <script src="https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+</head>
+<body style = "background-color: #000;">
+<div class="l-demo-container">
+
+  <canvas id="drawing-canvas" width="480" height="420" style="background-color: #fff"></canvas><br>
+  <input type="text" value = "000" id="in"></input>
+</div>
+
+
+<script>
+var color = "000";
+
+function checkcolor(){color = $("#in").val();}
+
+var firebaseLink = new Firebase("https://testeroonie.firebaseio.com/");
+
+var mouse = {
+  down: false,
+  x: 0,
+  y: 0
+}
+
+var canvas = document.getElementById("drawing-canvas");
+
+var ctx = canvas.getContext("2d");
+
+
+
+canvas.onmousedown = function(){mouse.down = true;}
+canvas.onmouseup = function(){mouse.down = false;}
+canvas.onmousemove = function(e){
+  if (!mouse.down) return;
+  updatepx(e.pageX, e.pageY);
+};
+
+
+function updatepx(x, y){
+  //ctx.fillRect(x,y,1,1);
+  checkcolor();
+  firebaseLink.child("pixelData/"+x+":"+y).set(color);
+}
+
+function update(snapshot){
+  console.log("KEY: " + snapshot.key());
+  var coords = snapshot.key().split(":");
+  ctx.fillStyle = "#"+snapshot.val();
+  ctx.fillRect(coords[0], coords[1], 1,1);
+  alert("done!");
+}
+
+function clear(snapshot){
+  var coords = snapshot.key().split(":");
+  ctx.clearRect(coords[0], coords[1], 1, 1);
+
+}
+
+firebaseLink.child("pixelData").on('child_added', update);
+firebaseLink.child("pixelData").on('child_changed', update);
+firebaseLink.child("pixelData").on('child_removed', clear);
+
+
+</script>
+
+</body>
